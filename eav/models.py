@@ -43,6 +43,7 @@ from django.contrib.contenttypes import generic
 from django.contrib.sites.models import Site
 from django.contrib.sites.managers import CurrentSiteManager
 from django.conf import settings
+from django.utils.timezone import now
 
 from .validators import *
 from .fields import EavSlugField, EavDatatypeField
@@ -198,7 +199,7 @@ class Attribute(models.Model):
     datatype = EavDatatypeField(_(u"data type"), max_length=6,
                                 choices=DATATYPE_CHOICES)
 
-    created = models.DateTimeField(_(u"created"), default=datetime.now,
+    created = models.DateTimeField(_(u"created"), default=now(),
                                    editable=False)
 
     modified = models.DateTimeField(_(u"modified"), auto_now=True)
@@ -354,7 +355,7 @@ class Value(models.Model):
     value_object = generic.GenericForeignKey(ct_field='generic_value_ct',
                                              fk_field='generic_value_id')
 
-    created = models.DateTimeField(_(u"created"), default=datetime.now)
+    created = models.DateTimeField(_(u"created"), default=now())
     modified = models.DateTimeField(_(u"modified"), auto_now=True)
 
     attribute = models.ForeignKey(Attribute, db_index=True,
