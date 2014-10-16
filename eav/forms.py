@@ -29,9 +29,14 @@ Classes
 from copy import deepcopy
 
 from django.forms import BooleanField, CharField, DateTimeField, FloatField, \
-                         IntegerField, ModelForm, ChoiceField, ValidationError
+                         IntegerField, ModelForm, ChoiceField, Textarea, \
+                         ValidationError
 from django.contrib.admin.widgets import AdminSplitDateTime
 from django.utils.translation import ugettext_lazy as _
+
+
+class TextField(CharField):
+    widget = Textarea
 
 
 class BaseDynamicEntityForm(ModelForm):
@@ -46,7 +51,8 @@ class BaseDynamicEntityForm(ModelForm):
     '''
 
     FIELD_CLASSES = {
-        'text': CharField,
+        'char': CharField,
+        'text': TextField,
         'float': FloatField,
         'int': IntegerField,
         'date': DateTimeField,

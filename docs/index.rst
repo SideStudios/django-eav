@@ -219,6 +219,9 @@ models admin pages.  Just register using the eav admin class::
 
     admin.site.register(Patient, PatientAdmin)
 
+TYPE_CHAR fields will be displayed as a type=text fieldand TYPE_TEXT fields 
+will be displayed with a textarea widget.
+
 
 Known Issues
 ============

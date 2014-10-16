@@ -124,7 +124,7 @@ class Attribute(models.Model):
 
         * int (TYPE_INT)
         * float (TYPE_FLOAT)
-        * text (TYPE_TEXT)
+        * char (TYPE_CHAR)
         * date (TYPE_DATE)
         * bool (TYPE_BOOLEAN)
         * object (TYPE_OBJECT)
@@ -135,7 +135,7 @@ class Attribute(models.Model):
     >>> Attribute.objects.create(name='Height', datatype=Attribute.TYPE_INT)
     <Attribute: Height (Integer)>
 
-    >>> Attribute.objects.create(name='Color', datatype=Attribute.TYPE_TEXT)
+    >>> Attribute.objects.create(name='Color', datatype=Attribute.TYPE_CHAR)
     <Attribute: Color (Text)>
 
     >>> yes = EnumValue.objects.create(value='yes')
@@ -156,6 +156,7 @@ class Attribute(models.Model):
         ordering = ['name']
         unique_together = ('site', 'slug')
 
+    TYPE_CHAR = 'char'
     TYPE_TEXT = 'text'
     TYPE_FLOAT = 'float'
     TYPE_INT = 'int'
@@ -165,7 +166,8 @@ class Attribute(models.Model):
     TYPE_ENUM = 'enum'
 
     DATATYPE_CHOICES = (
-        (TYPE_TEXT, _(u"Text")),
+        (TYPE_CHAR, _(u"Text")),
+        (TYPE_TEXT, _(u"Textarea")),
         (TYPE_FLOAT, _(u"Float")),
         (TYPE_INT, _(u"Integer")),
         (TYPE_DATE, _(u"Date")),
@@ -220,6 +222,7 @@ class Attribute(models.Model):
            validators to return as well as the default, built-in one.
         '''
         DATATYPE_VALIDATORS = {
+            'char': validate_char,
             'text': validate_text,
             'float': validate_float,
             'int': validate_int,
@@ -330,7 +333,7 @@ class Value(models.Model):
     >>> from django.contrib.auth.models import User
     >>> eav.register(User)
     >>> u = User.objects.create(username='crazy_dev_user')
-    >>> a = Attribute.objects.create(name='Favorite Drink', datatype='text',
+    >>> a = Attribute.objects.create(name='Favorite Drink', datatype='char',
     ... slug='fav_drink')
     >>> Value.objects.create(entity=u, attribute=a, value_text='red bull')
     <Value: crazy_dev_user - Favorite Drink: "red bull">
@@ -381,17 +384,26 @@ class Value(models.Model):
                                         {'choice': self.value_enum,
                                          'attribute': self.attribute})
 
+    def _get_datatype(self):
+        '''
+        Return the string of the column to work on
+        '''
+        datatype = self.attribute.datatype
+        if datatype == Attribute.TYPE_CHAR:
+            datatype = Attribute.TYPE_TEXT
+        return 'value_%s' % datatype
+
     def _get_value(self):
         '''
         Return the python object this value is holding
         '''
-        return getattr(self, 'value_%s' % self.attribute.datatype)
+        return getattr(self, self._get_datatype())
 
     def _set_value(self, new_value):
         '''
         Set the object this value is holding
         '''
-        setattr(self, 'value_%s' % self.attribute.datatype, new_value)
+        setattr(self, self._get_datatype(), new_value)
 
     value = property(_get_value, _set_value)
 

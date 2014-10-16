@@ -41,12 +41,19 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
 
-def validate_text(value):
+def validate_char(value):
     '''
     Raises ``ValidationError`` unless *value* type is ``str`` or ``unicode``
     '''
     if not (type(value) == unicode or type(value) == str):
         raise ValidationError(_(u"Must be str or unicode"))
+
+
+def validate_text(value):
+    '''
+    Raises ``ValidationError`` unless *value* type is ``str`` or ``unicode``
+    '''
+    return validate_char(value)
 
 
 def validate_float(value):

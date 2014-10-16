@@ -59,7 +59,8 @@ Create some attributes
 
     >>> from eav.models import Attribute
     >>> Attribute.objects.create(name='Weight', datatype=Attribute.TYPE_FLOAT)
-    >>> Attribute.objects.create(name='Color', datatype=Attribute.TYPE_TEXT)
+    >>> Attribute.objects.create(name='Color', datatype=Attribute.TYPE_CHAR)
+    >>> Attribute.objects.create(name='Warranty', datatype=Attribute.TYPE_TEXT)
 
 
 Assign eav values
