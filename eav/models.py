@@ -211,6 +211,15 @@ class Attribute(models.Model):
     objects = models.Manager()
     on_site = CurrentSiteManager()
 
+    def _get_datatype(self):
+        '''
+        Return the string of the column to work on
+        '''
+        datatype = self.attribute.datatype
+        if datatype == Attribute.TYPE_CHAR:
+            datatype = Attribute.TYPE_TEXT
+        return 'value_%s' % datatype
+
     def get_validators(self):
         '''
         Returns the appropriate validator function from :mod:`~eav.validators`
@@ -384,26 +393,17 @@ class Value(models.Model):
                                         {'choice': self.value_enum,
                                          'attribute': self.attribute})
 
-    def _get_datatype(self):
-        '''
-        Return the string of the column to work on
-        '''
-        datatype = self.attribute.datatype
-        if datatype == Attribute.TYPE_CHAR:
-            datatype = Attribute.TYPE_TEXT
-        return 'value_%s' % datatype
-
     def _get_value(self):
         '''
         Return the python object this value is holding
         '''
-        return getattr(self, self._get_datatype())
+        return getattr(self, self.attribute._get_datatype())
 
     def _set_value(self, new_value):
         '''
         Set the object this value is holding
         '''
-        setattr(self, self._get_datatype(), new_value)
+        setattr(self, self.attribute._get_datatype(), new_value)
 
     value = property(_get_value, _set_value)
 
