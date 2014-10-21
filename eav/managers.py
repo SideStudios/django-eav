@@ -100,10 +100,10 @@ def expand_eav_filter(model_cls, key, value):
        fields[0] == config_cls.eav_attr:
         slug = fields[1]
         gr_name = config_cls.generic_relation_attr
-        datatype = Attribute.objects.get(slug=slug).datatype
+        datatype = Attribute.objects.get(slug=slug)._get_datatype()
 
         lookup = '__%s' % fields[2] if len(fields) > 2 else ''
-        kwargs = {'value_%s%s' % (datatype, lookup): value,
+        kwargs = {'%s%s' % (datatype, lookup): value,
                   'attribute__slug': slug}
         value = Value.objects.filter(**kwargs)
 
