@@ -215,7 +215,7 @@ class Attribute(models.Model):
         '''
         Return the string of the column to work on
         '''
-        datatype = self.attribute.datatype
+        datatype = self.datatype
         if datatype == Attribute.TYPE_CHAR:
             datatype = Attribute.TYPE_TEXT
         return 'value_%s' % datatype
@@ -533,6 +533,7 @@ class Entity(object):
         '''
         Returns a single :class:`Attribute` with *slug*
         '''
+        slug = slug.replace('_', '-')
         return self.get_all_attributes().get(slug=slug)
 
     def get_value_by_attribute(self, attribute):
