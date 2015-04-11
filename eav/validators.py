@@ -45,7 +45,7 @@ def validate_char(value):
     '''
     Raises ``ValidationError`` unless *value* type is ``str`` or ``unicode``
     '''
-    if not (type(value) == unicode or type(value) == str):
+    if type(value) != str:
         raise ValidationError(_(u"Must be str or unicode"))
 
 
