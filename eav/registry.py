@@ -44,6 +44,7 @@ class EavConfig(object):
     manager_attr = 'objects'
     manager_only = False
     eav_attr = 'eav'
+    entity_cls = Entity
     generic_relation_attr = 'eav_values'
     generic_relation_related_name = None
 
@@ -106,7 +107,7 @@ class Registry(object):
         '''
         instance = kwargs['instance']
         config_cls = instance.__class__._eav_config_cls
-        setattr(instance, config_cls.eav_attr, Entity(instance))
+        setattr(instance, config_cls.eav_attr, config_cls.entity_cls(instance))
 
     def __init__(self, model_cls):
         '''
