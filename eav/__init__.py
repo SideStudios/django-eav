@@ -16,7 +16,7 @@
 #
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with EAV-Django.  If not, see <http://gnu.org/licenses/>.
-VERSION = (0, 9, 2)
+VERSION = (0, 9, 3)
 
 def get_version():
     version = "%s.%s" % (VERSION[0], VERSION[1])
