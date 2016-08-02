@@ -29,7 +29,7 @@ Classes
 
 from django.db.utils import DatabaseError
 from django.db.models.signals import pre_init, post_init, pre_save, post_save
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes import fields as generic
 
 from .managers import EntityManager
 from .models import Entity, Attribute, Value
@@ -166,7 +166,7 @@ class Registry(object):
                      generic.GenericRelation(Value,
                                              object_id_field='entity_id',
                                              content_type_field='entity_ct',
-                                             related_name=rel_name)
+                                             related_query_name=rel_name)
         generic_relation.contribute_to_class(self.model_cls, gr_name)
 
     def _detach_generic_relation(self):
