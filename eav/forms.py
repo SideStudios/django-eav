@@ -58,6 +58,7 @@ class BaseDynamicEntityForm(ModelForm):
         'date': DateTimeField,
         'bool': BooleanField,
         'enum': ChoiceField,
+        'multi': MultipleChoiceField,
     }
 
     def __init__(self, data=None, *args, **kwargs):
@@ -81,7 +82,7 @@ class BaseDynamicEntityForm(ModelForm):
             }
 
             datatype = attribute.datatype
-            if datatype == attribute.TYPE_ENUM:
+            if datatype in [attribute.TYPE_ENUM, attribute.TYPE_MULTI]:
                 enums = attribute.get_choices() \
                                  .values_list('id', 'value')
 
@@ -89,7 +90,10 @@ class BaseDynamicEntityForm(ModelForm):
 
                 defaults.update({'choices': choices})
                 if value:
-                    defaults.update({'initial': value.pk})
+                    if datatype == attribute.TYPE_MULTI:
+                        defaults.update({'initial': [val.pk for val in value]})
+                    else:
+                        defaults.update({'initial': value.pk})
 
             elif datatype == attribute.TYPE_DATE:
                 defaults.update({'widget': AdminSplitDateTime})
@@ -100,7 +104,7 @@ class BaseDynamicEntityForm(ModelForm):
             self.fields[attribute.slug] = MappedField(**defaults)
 
             # fill initial data (if attribute was already defined)
-            if value and not datatype == attribute.TYPE_ENUM: #enum done above
+            if value and datatype not in [self.TYPE_ENUM, self.TYPE_MULTI]: #enum done above
                 self.initial[attribute.slug] = value
 
     def save(self, commit=True):
@@ -125,6 +129,11 @@ class BaseDynamicEntityForm(ModelForm):
             if attribute.datatype == attribute.TYPE_ENUM:
                 if value:
                     value = attribute.enum_group.enums.get(pk=value)
+                else:
+                    value = None
+            elif attribute.datatype == attribute.TYPE_MULTI:
+                if value:
+                    value = list(attribute.enum_group.enums.filter(pk__in=value))
                 else:
                     value = None
 

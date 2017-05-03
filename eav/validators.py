@@ -113,3 +113,18 @@ def validate_enum(value):
         raise ValidationError(_(u"Must be an EnumValue model object instance"))
     if not value.pk:
         raise ValidationError(_(u"EnumValue has not been saved yet"))
+
+
+def validate_multi(value):
+    '''
+    Raises ``ValidationError`` unless *value* is a list of saved
+    :class:`~eav.models.EnumValue` model instances.
+    '''
+    from .models import EnumValue
+    if not isinstance(value, list):
+        raise ValidationError(_(u"Must be a list of EnumValue model object instances"))
+    for v in value:
+        if not isinstance(v, EnumValue):
+            raise ValidationError(_(u"Must be an EnumValue model object instance"))
+        if not v.pk:
+            raise ValidationError(_(u"EnumValue has not been saved yet"))

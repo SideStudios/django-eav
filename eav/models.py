@@ -120,7 +120,7 @@ class Attribute(models.Model):
        to save or create any entity object for which this attribute applies,
        without first setting this EAV attribute.
 
-    There are 7 possible values for datatype:
+    There are 8 possible values for datatype:
 
         * int (TYPE_INT)
         * float (TYPE_FLOAT)
@@ -129,6 +129,7 @@ class Attribute(models.Model):
         * bool (TYPE_BOOLEAN)
         * object (TYPE_OBJECT)
         * enum (TYPE_ENUM)
+        * mulit-select (TYPE_MULTI)
 
     Examples:
 
@@ -164,6 +165,7 @@ class Attribute(models.Model):
     TYPE_BOOLEAN = 'bool'
     TYPE_OBJECT = 'object'
     TYPE_ENUM = 'enum'
+    TYPE_MULTI = 'multi'
 
     DATATYPE_CHOICES = (
         (TYPE_CHAR, _(u"Text")),
@@ -174,6 +176,7 @@ class Attribute(models.Model):
         (TYPE_BOOLEAN, _(u"True / False")),
         (TYPE_OBJECT, _(u"Django Object")),
         (TYPE_ENUM, _(u"Multiple Choice")),
+        (TYPE_MULTI, _(u"Multiple Choice/Mutliple Select")),
     )
 
     name = models.CharField(_(u"name"), max_length=100,
@@ -216,7 +219,7 @@ class Attribute(models.Model):
         Return the string of the column to work on
         '''
         datatype = self.datatype
-        if datatype == Attribute.TYPE_CHAR:
+        if datatype == Attribute.TYPE_CHAR or datatype == Attribute.TYPE_MULTI:
             datatype = Attribute.TYPE_TEXT
         return 'value_%s' % datatype
 
@@ -239,6 +242,7 @@ class Attribute(models.Model):
             'bool': validate_bool,
             'object': validate_object,
             'enum': validate_enum,
+            'multi': validate_multi,
         }
 
         validation_function = DATATYPE_VALIDATORS[self.datatype]
@@ -256,6 +260,12 @@ class Attribute(models.Model):
                 raise ValidationError(_(u"%(enum)s is not a valid choice "
                                         u"for %(attr)s") % \
                                        {'enum': value, 'attr': self})
+        if self.datatype == self.TYPE_MULTI:
+            for val in value:
+                if val not in self.enum_group.enums.all():
+                    raise ValidationError(_(u"%(enum)s is not a valid choice "
+                                            u"for %(attr)s") % \
+                                           {'enum': val, 'attr': self})
 
     def save(self, *args, **kwargs):
         '''
@@ -273,12 +283,12 @@ class Attribute(models.Model):
         the attribute's datatype is *TYPE_ENUM* and enum_group is not set,
         or if the attribute is not *TYPE_ENUM* and the enum group is set.
         '''
-        if self.datatype == self.TYPE_ENUM and not self.enum_group:
+        if self.datatype in [self.TYPE_ENUM, self.TYPE_MULTI] and not self.enum_group:
             raise ValidationError(_(
                 u"You must set the choice group for multiple choice" \
                 u"attributes"))
 
-        if self.datatype != self.TYPE_ENUM and self.enum_group:
+        if self.datatype not in [self.TYPE_ENUM, self.TYPE_MULTI] and self.enum_group:
             raise ValidationError(_(
                 u"You can only assign a choice group to multiple choice " \
                 u"attributes"))
@@ -286,9 +296,9 @@ class Attribute(models.Model):
     def get_choices(self):
         '''
         Returns a query set of :class:`EnumValue` objects for this attribute.
-        Returns None if the datatype of this attribute is not *TYPE_ENUM*.
+        Returns None if the datatype of this attribute is not *TYPE_ENUM* or *TYPE_MULTI*.
         '''
-        if not self.datatype == Attribute.TYPE_ENUM:
+        if self.datatype not in [self.TYPE_ENUM, self.TYPE_MULTI]:
             return None
         return self.enum_group.enums.all()
 
@@ -392,17 +402,33 @@ class Value(models.Model):
                                         u"choice for %s(attribute)") % \
                                         {'choice': self.value_enum,
                                          'attribute': self.attribute})
+        if self.attribute.datatype == Attribute.TYPE_MULTI and \
+           self.value_text:
+            vals = self.value_text.split(',')
+            for val in vals:
+                if not self.attribute.enum_group.enums.filter(id=val).exists():
+                    raise ValidationError(_(u"%(choice)s is not a valid " \
+                                            u"choice for %s(attribute)") % \
+                                            {'choice': val,
+                                             'attribute': self.attribute})
 
     def _get_value(self):
         '''
         Return the python object this value is holding
         '''
+        if self.attribute.datatype == Attribute.TYPE_MULTI:
+            value = getattr(self, self.attribute._get_datatype())
+            if value:
+                return list(self.attribute.enum_group.enums.filter(id__in=value.split(','))) or None
+            return None
         return getattr(self, self.attribute._get_datatype())
 
     def _set_value(self, new_value):
         '''
         Set the object this value is holding
         '''
+        if self.attribute.datatype == Attribute.TYPE_MULTI and isinstance(new_value, list):
+            new_value = ','.join([str(v.id) for v in new_value])
         setattr(self, self.attribute._get_datatype(), new_value)
 
     value = property(_get_value, _set_value)
