@@ -84,6 +84,9 @@ class EnumValue(models.Model):
     def __unicode__(self):
         return self.value
 
+    def __str__(self):
+        return self.value
+
 
 class EnumGroup(models.Model):
     '''
@@ -99,6 +102,9 @@ class EnumGroup(models.Model):
     enums = models.ManyToManyField(EnumValue, verbose_name=_(u"enum group"))
 
     def __unicode__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
 
 
@@ -337,6 +343,9 @@ class Attribute(models.Model):
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.get_datatype_display())
 
+    def __str__(self):
+        return u"%s (%s)" % (self.name, self.get_datatype_display())
+
 
 class Value(models.Model):
     '''
@@ -434,6 +443,10 @@ class Value(models.Model):
     value = property(_get_value, _set_value)
 
     def __unicode__(self):
+        return u"%s - %s: \"%s\"" % (self.entity, self.attribute.name,
+                                     self.value)
+
+    def __str__(self):
         return u"%s - %s: \"%s\"" % (self.entity, self.attribute.name,
                                      self.value)
 
